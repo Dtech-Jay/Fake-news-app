@@ -1,8 +1,5 @@
 import streamlit as st
 import joblib
-import re
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
@@ -17,60 +14,44 @@ st.sidebar.write("""
 This application uses a **Machine Learning model**
 to classify a statement as **True / False / Partially True**.
 
-**Steps:**
+**How to use:**
 1. Enter a statement  
 2. Click **Predict**  
-3. View result & confidence
+3. View the result and confidence
 """)
 
 st.sidebar.markdown("---")
-st.sidebar.write("👨‍💻 Developed for ML Mini Project")
+st.sidebar.write("👨‍💻 ML Mini Project")
 
 # ---------------- MAIN TITLE ----------------
 st.title("📰 Fake News Detection System")
-st.markdown("### Enter a statement to check its authenticity")
-
-# ---------------- TEXT PREPROCESSING ----------------
-lemmatizer = WordNetLemmatizer()
-stop_words = set(stopwords.words('english'))
-
-def preprocess_text(text):
-    text = text.lower()
-    text = re.sub(r'[^a-z ]', '', text)
-    tokens = text.split()
-    processed_tokens = [
-        lemmatizer.lemmatize(word)
-        for word in tokens
-        if word not in stop_words
-    ]
-    return ' '.join(processed_tokens)
+st.markdown("Check whether a statement is **True or Fake** using ML")
 
 # ---------------- LOAD MODEL ----------------
 try:
     model = joblib.load("logistic_regression_model.joblib")
     tfidf = joblib.load("tfidf_vectorizer.joblib")
-except:
-    st.error("❌ Model files not found. Please check deployment.")
+except Exception as e:
+    st.error("❌ Model files not found or failed to load.")
     st.stop()
 
 # ---------------- USER INPUT ----------------
 user_statement = st.text_area(
-    "✍️ Type your statement here:",
+    "✍️ Enter the statement:",
     height=150,
-    placeholder="Example: The government has announced a new policy today..."
+    placeholder="Example: The government announced a new education policy today..."
 )
 
 # ---------------- PREDICT BUTTON ----------------
 if st.button("🔍 Predict"):
     if user_statement.strip() == "":
-        st.warning("⚠️ Please enter a statement before predicting.")
+        st.warning("⚠️ Please enter a statement.")
     else:
         with st.spinner("Analyzing statement..."):
-            clean_text = preprocess_text(user_statement)
-            vector = tfidf.transform([clean_text])
-
+            # 🚨 DO NOT preprocess here (VERY IMPORTANT)
+            vector = tfidf.transform([user_statement])
             prediction = model.predict(vector)[0]
-            probability = model.predict_proba(vector).max()
+            confidence = model.predict_proba(vector).max()
 
         # ---------------- LABEL MAPPING ----------------
         label_map = {
@@ -81,12 +62,11 @@ if st.button("🔍 Predict"):
             4: "🔥 Pants on Fire"
         }
 
-        # ---------------- RESULT DISPLAY ----------------
+        # ---------------- RESULT ----------------
         st.markdown("---")
         st.subheader("📊 Prediction Result")
-
         st.success(f"**Label:** {label_map.get(prediction, prediction)}")
-        st.info(f"**Confidence:** {round(probability * 100, 2)}%")
+        st.info(f"**Confidence:** {round(confidence * 100, 2)}%")
 
 # ---------------- FOOTER ----------------
 st.markdown("---")

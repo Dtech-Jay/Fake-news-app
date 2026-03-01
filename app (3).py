@@ -59,12 +59,4 @@ if user_statement:
     st.write(f"The predicted label for your statement is: {prediction[0]}")
 
 
-label_map = {
-    0: "False",
-    1: "True",
-    2: "Half True",
-    3: "Mostly True",
-    4: "Pants on Fire"
-}
 
-st.write(f"Prediction: {label_map.get(prediction[0], prediction[0])}")

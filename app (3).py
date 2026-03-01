@@ -4,28 +4,25 @@ import re
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
-from nltk.tokenize import word_tokenize
+
 
 # Download necessary NLTK data (only if not already downloaded)
 # These lines are crucial for Streamlit deployment as NLTK data might not be present
-nltk.download('punkt', quiet=True)
-nltk.download('stopwords', quiet=True)
-nltk.download('wordnet', quiet=True)
-
+lemmatizer = WordNetLemmatizer()
+stop_words = set(stopwords.words('english'))
 # Initialize lemmatizer and load stopwords
 lemmatizer = WordNetLemmatizer()
 stop_words = set(stopwords.words('english'))
 
 def preprocess_text(text):
-    # 1. Convert to lowercase
     text = text.lower()
-    # 2. Remove punctuation
-    text = re.sub(r'[^a-z ]', '', text) # Keep only lowercase letters and spaces
-    # 3. Tokenize
-    tokens = word_tokenize(text)
-    # 4. Remove stop words and lemmatize
-    processed_tokens = [lemmatizer.lemmatize(word) for word in tokens if word not in stop_words]
-    # 5. Join back into a string
+    text = re.sub(r'[^a-z ]', '', text)
+    tokens = text.split()   # ✅ SAFE replacement
+    processed_tokens = [
+        lemmatizer.lemmatize(word)
+        for word in tokens
+        if word not in stop_words
+    ]
     return ' '.join(processed_tokens)
 
 # Load the trained model and TF-IDF vectorizer
@@ -60,3 +57,14 @@ if user_statement:
     # Display the prediction
     st.subheader("Prediction:")
     st.write(f"The predicted label for your statement is: {prediction[0]}")
+
+
+label_map = {
+    0: "False",
+    1: "True",
+    2: "Half True",
+    3: "Mostly True",
+    4: "Pants on Fire"
+}
+
+st.write(f"Prediction: {label_map.get(prediction[0], prediction[0])}")
